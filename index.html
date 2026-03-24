@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOZIM AI — v5.1 Web</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+  :root {
+    --bg:#050810; --panel:#0a0f1e; --border:#1a2540;
+    --accent:#00f5c4; --accent2:#ff4d6d; --accent3:#6c63ff;
+    --dim:#3a4a6a; --text:#c8d8f0; --vol:#ffaa00; --shot:#00ccff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;
+    height:100dvh;overflow:hidden;display:flex;flex-direction:column;}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,
+    rgba(0,245,196,.012) 2px,rgba(0,245,196,.012) 4px);}
+
+  header{display:flex;align-items:center;justify-content:space-between;
+    padding:8px 20px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;}
+  .logo{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--accent);
+    letter-spacing:4px;text-shadow:0 0 20px rgba(0,245,196,.4);}
+  .logo span{color:var(--dim);font-size:9px;display:block;letter-spacing:5px;}
+  .hright{display:flex;gap:12px;align-items:center;}
+  #clock{font-size:12px;color:var(--dim);}
+  #fps{font-size:10px;padding:2px 8px;border:1px solid var(--dim);color:var(--dim);min-width:56px;text-align:center;}
+  #spill{display:flex;align-items:center;gap:6px;padding:3px 10px;
+    border:1px solid var(--accent);font-size:10px;color:var(--accent);transition:all .3s;}
+  #spill .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 1.5s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+  main{display:flex;flex:1;overflow:hidden;}
+
+  aside{width:228px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;padding:10px;gap:7px;overflow-y:auto;}
+  aside::-webkit-scrollbar{width:3px;}
+  aside::-webkit-scrollbar-thumb{background:var(--border);}
+
+  .btn{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid currentColor;
+    background:transparent;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:bold;
+    cursor:pointer;width:100%;transition:all .2s;letter-spacing:1px;}
+  .btn:hover{filter:brightness(1.4);transform:translateX(2px);}
+  .btn:active{transform:scale(.97);}
+  .btn-s{color:var(--accent);}  .btn-s:hover{background:rgba(0,245,196,.1);}
+  .btn-x{color:var(--accent2);} .btn-x:hover{background:rgba(255,77,109,.1);}
+  .btn-v{color:var(--vol);}     .btn-v:hover{background:rgba(255,170,0,.1);}
+  .btn-p{color:var(--shot);}    .btn-p:hover{background:rgba(0,204,255,.1);}
+
+  .sep{border:none;border-top:1px solid var(--border);margin:1px 0;}
+  .stitle{font-size:8px;color:var(--dim);letter-spacing:3px;margin:1px 0;}
+
+  .vbox{padding:8px;border:1px solid var(--border);background:rgba(255,170,0,.04);
+    display:flex;flex-direction:column;gap:5px;}
+  .vrow{display:flex;align-items:center;gap:6px;}
+  #vsl{flex:1;-webkit-appearance:none;height:4px;background:var(--border);outline:none;}
+  #vsl::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;
+    border-radius:50%;background:var(--vol);cursor:pointer;}
+  #vpct{font-size:11px;color:var(--vol);min-width:35px;text-align:right;}
+  .vbarbg{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+  #vbar{height:100%;background:linear-gradient(90deg,var(--vol),#ff6600);width:50%;transition:width .2s;}
+
+  .gi{display:flex;gap:5px;align-items:flex-start;font-size:8px;padding:2px 0;}
+  .gdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+  .gk{color:var(--text);font-weight:bold;} .gv{color:var(--dim);}
+
+  .sr{display:flex;justify-content:space-between;font-size:8px;padding:2px 0;}
+  .sdot{width:7px;height:7px;border-radius:50%;background:var(--border);transition:all .2s;}
+  .on-g{background:var(--accent)!important;box-shadow:0 0 5px var(--accent);}
+  .on-r{background:var(--accent2)!important;box-shadow:0 0 5px var(--accent2);}
+  .on-v{background:var(--vol)!important;box-shadow:0 0 5px var(--vol);}
+  .on-p{background:var(--accent3)!important;box-shadow:0 0 5px var(--accent3);}
+
+  #log{background:#020508;border:1px solid var(--border);padding:5px;font-size:7px;
+    color:var(--accent);height:68px;overflow-y:auto;flex-shrink:0;}
+  #log::-webkit-scrollbar{width:2px;}
+  #log::-webkit-scrollbar-thumb{background:var(--border);}
+
+  .cam{flex:1;display:flex;position:relative;background:#000;overflow:hidden;}
+  #video{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none;}
+  #canvas{width:100%;height:100%;object-fit:contain;display:block;}
+
+  #ph{position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:10px;color:var(--border);}
+  #ph .ico{font-size:44px;} #ph p{font-size:11px;letter-spacing:2px;}
+
+  #lov{position:absolute;inset:0;background:rgba(5,8,16,.93);
+    display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:10;}
+  #lov.show{display:flex;}
+  .spin{width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--accent);
+    border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #lmsg{font-size:11px;color:var(--accent);letter-spacing:2px;}
+
+  #perr{display:none;position:absolute;inset:0;align-items:center;justify-content:center;
+    flex-direction:column;gap:12px;background:rgba(5,8,16,.97);z-index:20;text-align:center;padding:24px;}
+  #perr.show{display:flex;}
+  #perr .ei{font-size:40px;}
+  #perr h3{color:var(--accent2);font-family:'Orbitron',monospace;font-size:13px;letter-spacing:2px;}
+  #perr p{color:var(--dim);font-size:10px;line-height:1.8;max-width:280px;}
+  #perr .rb{color:var(--accent);border:1px solid var(--accent);background:transparent;
+    font-family:'Share Tech Mono',monospace;font-size:11px;padding:8px 20px;cursor:pointer;letter-spacing:2px;}
+  #perr .rb:hover{background:rgba(0,245,196,.1);}
+
+  #act{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+    font-family:'Orbitron',monospace;font-size:13px;font-weight:700;
+    color:var(--accent);text-shadow:0 0 14px currentColor;opacity:0;
+    transition:opacity .3s;pointer-events:none;letter-spacing:3px;white-space:nowrap;}
+  #act.show{opacity:1;}
+
+  .ctl,.cbr{position:absolute;width:18px;height:18px;pointer-events:none;opacity:.4;}
+  .ctl{top:8px;left:8px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);}
+  .cbr{bottom:8px;right:8px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);}
+
+  .rp{width:178px;flex-shrink:0;background:var(--panel);border-left:1px solid var(--border);
+    padding:10px;display:flex;flex-direction:column;gap:7px;overflow-y:auto;}
+  .rp::-webkit-scrollbar{width:2px;}
+  .rp::-webkit-scrollbar-thumb{background:var(--border);}
+  #gal{display:flex;flex-direction:column;gap:5px;flex:1;overflow-y:auto;}
+  .th{border:1px solid var(--border);cursor:pointer;position:relative;transition:border-color .2s;}
+  .th:hover{border-color:var(--shot);}
+  .th img{width:100%;display:block;}
+  .thts{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.75);
+    font-size:7px;color:var(--shot);padding:2px 4px;text-align:center;}
+  #ge{font-size:8px;color:var(--dim);text-align:center;padding:16px 0;}
+
+  #toast{position:fixed;top:54px;left:50%;transform:translateX(-50%) translateY(-8px);
+    background:var(--panel);border:1px solid var(--accent);color:var(--accent);
+    font-family:'Orbitron',monospace;font-size:11px;padding:7px 18px;opacity:0;
+    transition:all .3s;pointer-events:none;z-index:1000;white-space:nowrap;letter-spacing:2px;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media(max-width:700px){aside,.rp{display:none;}}
+  .mob{display:none;}
+  @media(max-width:700px){
+    .mob{display:flex;gap:6px;padding:6px;background:rgba(10,15,30,.97);
+      border-top:1px solid var(--border);position:fixed;bottom:0;left:0;right:0;z-index:100;}
+    .mob .btn{flex:1;justify-content:center;font-size:10px;padding:7px 2px;}
+    body{padding-bottom:50px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">NOZIM AI<span>GESTURE CONTROL  v5.1</span></div>
+  <div class="hright">
+    <div id="fps">-- FPS</div>
+    <div id="spill"><div class="dot"></div><span id="stxt">TAYYOR</span></div>
+    <div id="clock">00:00:00</div>
+  </div>
+</header>
+
+<main>
+<aside>
+  <button class="btn btn-s" onclick="startEngine()">🚀 START</button>
+  <button class="btn btn-x" onclick="stopEngine()">⏹ STOP</button>
+  <hr class="sep">
+  <button class="btn btn-v" onclick="toggleVol()">🔊 OVOZ REJIMI</button>
+  <button class="btn btn-p" onclick="manualShot()">📸 SCREENSHOT</button>
+  <hr class="sep">
+  <div class="vbox">
+    <div class="stitle">🔊 OVOZ BALANDLIGI</div>
+    <div class="vrow">
+      <input type="range" id="vsl" min="0" max="100" value="50" oninput="uiVol(this.value)">
+      <span id="vpct">50%</span>
+    </div>
+    <div class="vbarbg"><div id="vbar"></div></div>
+  </div>
+  <hr class="sep">
+  <div class="stitle">BOSHQARUV GESTLARI</div>
+  <div class="gi"><div class="gdot" style="background:#00f5c4"></div><div><div class="gk">KICHIK BARMOG'</div><div class="gv">→ Kursor</div></div></div>
+  <div class="gi"><div class="gdot" style="background:#00f5c4"></div><div><div class="gk">BOSH + KO'RSATKICH</div><div class="gv">→ Chap klik / 2x</div></div></div>
+  <div class="gi"><div class="gdot" style="background:#ff4d6d"></div><div><div class="gk">BOSH + O'RTA</div><div class="gv">→ O'ng klik</div></div></div>
+  <div class="gi"><div class="gdot" style="background:#6c63ff"></div><div><div class="gk">KO'RS. + O'RTA</div><div class="gv">→ Scroll</div></div></div>
+  <div class="gi"><div class="gdot" style="background:#aa66ff"></div><div><div class="gk">BOSH + UZUQ</div><div class="gv">→ Drag</div></div></div>
+  <div class="gi"><div class="gdot" style="background:#ffaa00"></div><div><div class="gk">BOSH + JIMJILOQ</div><div class="gv">→ Ovoz +/−</div></div></div>
+  <div class="gi"><div class="gdot" style="background:#00ccff"></div><div><div class="gk">✌ IKKITA BARMOG'</div><div class="gv">→ Screenshot</div></div></div>
+  <div class="gi"><div class="gdot" style="background:#ffff00"></div><div><div class="gk">BARCHA 5 OCHIQ</div><div class="gv">→ Reset</div></div></div>
+  <hr class="sep">
+  <div class="stitle">HOLAT</div>
+  <div class="sr"><span>Chap klik</span><div class="sdot" id="sd-l"></div></div>
+  <div class="sr"><span>O'ng klik</span><div class="sdot" id="sd-r"></div></div>
+  <div class="sr"><span>Scroll</span>   <div class="sdot" id="sd-s"></div></div>
+  <div class="sr"><span>Drag</span>     <div class="sdot" id="sd-d"></div></div>
+  <div class="sr"><span>Ovoz</span>     <div class="sdot" id="sd-v"></div></div>
+  <hr class="sep">
+  <div id="log"></div>
+</aside>
+
+<div class="cam">
+  <div class="ctl"></div><div class="cbr"></div>
+  <video id="video" playsinline autoplay muted></video>
+  <canvas id="canvas"></canvas>
+  <div id="ph"><div class="ico">📷</div><p>KAMERA KO'RINISHI</p><p style="font-size:9px;color:var(--dim)">START bosing</p></div>
+  <div id="lov"><div class="spin"></div><div id="lmsg">YUKLANMOQDA...</div></div>
+  <div id="perr">
+    <div class="ei">🚫</div>
+    <h3>KAMERA RUXSATI YO'Q</h3>
+    <p>Brauzer kameraga ruxsat bermadi.<br>Manzil satrida 🔒 → Kamera → Ruxsat bering.<br>Keyin sahifani yangilang yoki qayta urinib ko'ring.</p>
+    <button class="rb" onclick="retryCam()">🔄 QAYTA URINISH</button>
+  </div>
+  <div id="act"></div>
+</div>
+
+<div class="rp">
+  <div class="stitle">📸 SKRINSHOT</div>
+  <div id="gal"><div id="ge">Hali skrinshot yo'q</div></div>
+</div>
+</main>
+
+<div class="mob">
+  <button class="btn btn-s" onclick="startEngine()">🚀 START</button>
+  <button class="btn btn-x" onclick="stopEngine()">⏹ STOP</button>
+  <button class="btn btn-p" onclick="manualShot()">📸</button>
+</div>
+<div id="toast"></div>
+
+<script type="module">
+import { HandLandmarker, FilesetResolver }
+  from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+const THUMB=4,INDEX=8,MIDDLE=12,RING=16,PINKY=20;
+const CONNS=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],
+  [9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+
+const video=document.getElementById('video');
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+const ph=document.getElementById('ph');
+const lov=document.getElementById('lov');
+const lmsg=document.getElementById('lmsg');
+const perr=document.getElementById('perr');
+const actEl=document.getElementById('act');
+const logEl=document.getElementById('log');
+
+let detector=null,running=false,stream=null,rafId=null,lastTs=0,fpsBuf=[];
+let volMode=false,volume=50;
+let pinchTI=false,pinchTM=false,pinchTR=false;
+let lastClick=0,scrollY=null,dragOn=false,volCd=0,shotCd=0,actTm=null;
+
+// Clock
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toTimeString().slice(0,8);},1000);
+
+function log(m){
+  const d=document.createElement('div');
+  d.textContent='['+new Date().toTimeString().slice(0,8)+'] '+m;
+  logEl.appendChild(d); logEl.scrollTop=logEl.scrollHeight;
+  if(logEl.children.length>30) logEl.removeChild(logEl.firstChild);
+}
+function toast(m,c='var(--accent)'){
+  const t=document.getElementById('toast');
+  t.textContent=m; t.style.borderColor=c; t.style.color=c;
+  t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);
+}
+function setSt(t,c='var(--accent)'){
+  document.getElementById('stxt').textContent=t;
+  const p=document.getElementById('spill');
+  p.style.borderColor=c; p.style.color=c; p.querySelector('.dot').style.background=c;
+}
+function showAct(t,c='var(--accent)'){
+  actEl.textContent=t; actEl.style.color=c; actEl.classList.add('show');
+  clearTimeout(actTm); actTm=setTimeout(()=>actEl.classList.remove('show'),1400);
+}
+function sd(id,cls,on){
+  const e=document.getElementById(id); e.className='sdot'+(on?' '+cls:'');
+}
+function applyVol(v){
+  volume=Math.max(0,Math.min(100,Math.round(v)));
+  document.getElementById('vbar').style.width=volume+'%';
+  document.getElementById('vpct').textContent=volume+'%';
+  document.getElementById('vsl').value=volume;
+}
+window.uiVol=v=>applyVol(parseInt(v));
+window.toggleVol=()=>{
+  volMode=!volMode;
+  toast(volMode?'🔊 OVOZ REJIMI YOQILDI':'🔇 O\'CHIRILDI','var(--vol)');
+  log(volMode?'Ovoz rejimi yoqildi':'Ovoz rejimi o\'chirildi');
+};
+
+function captureShot(){
+  const s=document.createElement('canvas'); s.width=canvas.width; s.height=canvas.height;
+  s.getContext('2d').drawImage(canvas,0,0);
+  const ts=new Date().toTimeString().slice(0,8);
+  const url=s.toDataURL('image/png');
+  const gal=document.getElementById('gal');
+  const ge=document.getElementById('ge'); if(ge) ge.remove();
+  const div=document.createElement('div'); div.className='th';
+  div.innerHTML=`<img src="${url}"><div class="thts">${ts}</div>`;
+  div.onclick=()=>{const a=document.createElement('a');a.href=url;
+    a.download=`nozim-${ts.replace(/:/g,'-')}.png`;a.click();};
+  gal.insertBefore(div,gal.firstChild);
+  while(gal.children.length>6) gal.removeChild(gal.lastChild);
+  toast('📸 SKRINSHOT SAQLANDI','var(--shot)'); log('Screenshot: '+ts);
+}
+window.manualShot=()=>{if(!running){toast('Avval START bosing!','var(--accent2)');return;}captureShot();};
+
+window.startEngine=async()=>{
+  if(running){log('Allaqachon ishlamoqda');return;}
+  ph.style.display='none'; perr.classList.remove('show');
+  lov.classList.add('show'); lmsg.textContent='KAMERA SO\'RALMOQDA...';
+  setSt('YUKLANMOQDA...','var(--accent3)');
+
+  // Camera
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({
+      video:{width:{ideal:640},height:{ideal:480},facingMode:'user',frameRate:{ideal:30}},audio:false
+    });
+    video.srcObject=stream;
+    await new Promise((res,rej)=>{
+      video.onloadedmetadata=()=>video.play().then(res).catch(rej);
+      video.onerror=rej;
+      setTimeout(()=>rej(new Error('Timeout')),10000);
+    });
+    log('Kamera ochildi ✓');
+  }catch(e){
+    lov.classList.remove('show'); perr.classList.add('show');
+    setSt('RUXSAT YO\'Q','var(--accent2)'); log('Kamera xato: '+e.message); return;
+  }
+
+  // MediaPipe
+  lmsg.textContent='MEDIAPIPE YUKLANMOQDA...';
+  try{
+    const vision=await FilesetResolver.forVisionTasks(
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'
+    );
+    lmsg.textContent='MODEL YUKLANMOQDA...';
+    detector=await HandLandmarker.createFromOptions(vision,{
+      baseOptions:{
+        modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+        delegate:'GPU'
+      },
+      runningMode:'VIDEO',numHands:1,
+      minHandDetectionConfidence:0.35,minHandPresenceConfidence:0.35,minTrackingConfidence:0.35
+    });
+    log('Model yuklandi ✓');
+  }catch(e){
+    lov.classList.remove('show'); setSt('MODEL XATO','var(--accent2)');
+    toast('Model yuklanmadi','var(--accent2)'); log('Model xato: '+e.message);
+    if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;} return;
+  }
+
+  lov.classList.remove('show'); running=true;
+  setSt('ISHLAMOQDA','var(--accent)'); toast('🚀 YOQILDI!');
+  log("Qo'lingizni ko'rsating..."); lastTs=0; fpsBuf=[];
+  rafId=requestAnimationFrame(loop);
+};
+
+window.stopEngine=()=>{
+  running=false;
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+  ph.style.display='flex'; ctx.clearRect(0,0,canvas.width,canvas.height);
+  setSt("TO'XTATILDI",'var(--accent2)'); toast("⏹ TO'XTATILDI",'var(--accent2)');
+  log("To'xtatildi."); ['sd-l','sd-r','sd-s','sd-d','sd-v'].forEach(id=>document.getElementById(id).className='sdot');
+  document.getElementById('fps').textContent='-- FPS';
+};
+
+window.retryCam=()=>{perr.classList.remove('show');window.startEngine();};
+
+function loop(ts){
+  if(!running) return;
+  rafId=requestAnimationFrame(loop);
+  if(lastTs){
+    const dt=(ts-lastTs)/1000;
+    fpsBuf.push(1/dt); if(fpsBuf.length>30) fpsBuf.shift();
+    document.getElementById('fps').textContent=Math.round(fpsBuf.reduce((a,b)=>a+b,0)/fpsBuf.length)+' FPS';
+  }
+  lastTs=ts;
+  if(video.readyState<2) return;
+  const vw=video.videoWidth,vh=video.videoHeight;
+  if(!vw||!vh) return;
+  if(canvas.width!==vw||canvas.height!==vh){canvas.width=vw;canvas.height=vh;}
+  ctx.save();ctx.translate(vw,0);ctx.scale(-1,1);ctx.drawImage(video,0,0,vw,vh);ctx.restore();
+  process(detector.detectForVideo(video,ts),vw,vh);
+}
+
+function process(result,W,H){
+  ['sd-l','sd-r','sd-s','sd-d','sd-v'].forEach(id=>document.getElementById(id).className='sdot');
+  if(!result.landmarks||!result.landmarks.length){
+    pinchTI=pinchTM=pinchTR=false;scrollY=null;dragOn=false;setSt("QO'L YO'Q",'var(--dim)');return;
+  }
+  const lms=result.landmarks[0];
+  const pts=lms.map(l=>[l.x*W,l.y*H]);
+
+  ctx.lineWidth=1.5;ctx.strokeStyle='rgba(0,160,100,.55)';
+  CONNS.forEach(([a,b])=>{ctx.beginPath();ctx.moveTo(pts[a][0],pts[a][1]);ctx.lineTo(pts[b][0],pts[b][1]);ctx.stroke();});
+  pts.forEach((p,i)=>{
+    const k=[THUMB,INDEX,MIDDLE,RING,PINKY].includes(i);
+    ctx.beginPath();ctx.arc(p[0],p[1],k?5:2.5,0,Math.PI*2);ctx.fillStyle=k?'#00f5c4':'#007850';ctx.fill();
+  });
+
+  const t=pts[THUMB],[ix,iy]=pts[INDEX],[mx,my]=pts[MIDDLE],[rx,ry]=pts[RING],[px,py]=pts[PINKY];
+  const palm=Math.hypot(pts[0][0]-pts[17][0],pts[0][1]-pts[17][1])+1e-6,TH=0.55;
+  const d_ti=Math.hypot(ix-t[0],iy-t[1])/palm,d_tm=Math.hypot(mx-t[0],my-t[1])/palm;
+  const d_tr=Math.hypot(rx-t[0],ry-t[1])/palm,d_tp=Math.hypot(px-t[0],py-t[1])/palm;
+  const d_im=Math.hypot(mx-ix,my-iy)/palm;
+  const tY=[pts[4][1],pts[8][1],pts[12][1],pts[16][1],pts[20][1]];
+  const bY=[pts[2][1],pts[5][1],pts[9][1],pts[13][1],pts[17][1]];
+  const openN=tY.filter((y,i)=>y<bY[i]).length;
+  const now=performance.now()/1000;
+
+  // Cursor
+  circ(px,py,13,'rgba(0,255,200,.9)',2,false);circ(px,py,3,'#00f5c4',0,true);
+
+  // Screenshot gest: index+middle up, rest down
+  if(pts[8][1]<pts[5][1]&&pts[12][1]<pts[9][1]&&pts[16][1]>=pts[13][1]&&pts[20][1]>=pts[17][1]&&d_ti>TH){
+    if(now>shotCd){captureShot();shotCd=now+2.5;showAct('📸 SCREENSHOT!','#00ccff');}
+    circ(ix,iy,16,'#00ccff',2,false);circ(mx,my,16,'#00ccff',2,false);
+    sd('sd-l','on-g',true);return;
+  }
+
+  if(openN===5){dragOn=false;pinchTI=pinchTM=pinchTR=false;scrollY=null;showAct('✋ RESET','#ffaa00');setSt('RESET','#ffaa00');return;}
+
+  if(volMode&&d_tp<TH){
+    sd('sd-v','on-v',true);
+    if(now>volCd){applyVol(Math.round((1-py/H)*100));volCd=now+0.12;}
+    showAct('🔊 '+volume+'%','#ffaa00');setSt('OVOZ: '+volume+'%','#ffaa00');
+    circ(px,py,15,'#ffaa00',2,false);circ(t[0],t[1],15,'#ffaa00',2,false);return;
+  }
+
+  const pairs={ti:d_ti,tm:d_tm,tr:d_tr,im:d_im};
+  const bKey=Object.entries(pairs).reduce((a,b)=>a[1]<b[1]?a:b)[0];
+  const bVal=pairs[bKey];
+
+  if(bKey==='ti'&&bVal<TH){
+    sd('sd-l','on-g',true);
+    if(!pinchTI){pinchTI=true;
+      if(now-lastClick<0.35){showAct('⚡ 2x KLIK!','#ffff00');log('2x klik!');setSt('2x KLIK','#ffff00');}
+      else{showAct('👆 CHAP KLIK','#00f5c4');log('Chap klik');setSt('CHAP KLIK','#00f5c4');}
+      lastClick=now;}
+    circ(ix,iy,17,'#00ff78',2,false);circ(t[0],t[1],17,'#00ff78',2,false);
+    ln(ix,iy,t[0],t[1],'rgba(0,255,120,.35)');
+  } else if(bKey!=='ti') pinchTI=false;
+
+  if(bKey==='tm'&&bVal<TH){
+    sd('sd-r','on-r',true);
+    if(!pinchTM){pinchTM=true;showAct("👆 O'NG KLIK",'#ff4d6d');log("O'ng klik");setSt("O'NG KLIK",'#ff4d6d');}
+    circ(mx,my,17,'#ff4d6d',2,false);circ(t[0],t[1],17,'#ff4d6d',2,false);
+  } else if(bKey!=='tm') pinchTM=false;
+
+  if(bKey==='tr'&&bVal<TH){
+    sd('sd-d','on-p',true);
+    if(!dragOn){dragOn=true;showAct('✊ DRAG!','#aa66ff');log('Drag boshlandi');setSt('DRAG','#6c63ff');}
+    else showAct('✊ DRAG...','#aa66ff');
+    circ(rx,ry,17,'#aa66ff',2,false);circ(t[0],t[1],17,'#aa66ff',2,false);
+  } else if(bKey!=='tr'&&dragOn){dragOn=false;showAct('✊ TASHLAB YUBORILDI','#aa66ff');log('Drag tugadi');}
+
+  if(bKey==='im'&&bVal<TH){
+    sd('sd-s','on-g',true);pinchTI=pinchTM=pinchTR=false;
+    if(scrollY===null) scrollY=iy;
+    else{const dy=scrollY-iy;if(Math.abs(dy)>14){
+      if(dy>0){showAct('↑ SCROLL UP','#6c63ff');setSt('SCROLL ↑','#6c63ff');}
+      else{showAct('↓ SCROLL DOWN','#6c63ff');setSt('SCROLL ↓','#6c63ff');}
+      scrollY=iy;}}
+    circ(ix,iy,14,'#64c8ff',2,false);circ(mx,my,14,'#64c8ff',2,false);
+  } else scrollY=null;
+
+  if(!dragOn&&openN>0&&openN<5) setSt('ISHLAMOQDA','#00f5c4');
+}
+
+function circ(x,y,r,c,lw,fill){
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+  if(fill){ctx.fillStyle=c;ctx.fill();}else{ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.stroke();}
+}
+function ln(x1,y1,x2,y2,c){
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle=c;ctx.lineWidth=1;ctx.stroke();
+}
+
+log('Tayyor. START bosing.');
+log('HTTPS yoki localhost kerak!');
+</script>
+</body>
+</html>
